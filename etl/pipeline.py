@@ -2,6 +2,13 @@
 from .extract import extract_all
 from .transform import transform_all
 import datetime as dt
+from sqlalchemy import create_engine
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+CONN_STRING = os.getenv("CONN_STRING")
 
 
 def run_pipeline() -> None:
@@ -23,7 +30,14 @@ def run_pipeline() -> None:
     duration = (end - start).total_seconds()    
     print(f"[pipeline] Finished ETL at {end.isoformat()}Z (duration: {duration:.1f}s)")
 
-
+    
     #3. Load
+    engine = create_engine(CONN_STRING)
+    with engine.connect() as conn:
+        daily_usage.to_sql('daily_usage', conn, if_exists='append', index=False)
+        print(f"[pipeline] Loaded {len(daily_usage)} rows into 'daily_usage' table")
+
+    return daily_usage
+
 
     
